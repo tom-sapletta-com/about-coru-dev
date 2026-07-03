@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>coru.dev — the autonomous refactor loop</title>
+<meta name="description" content="Animated presentation: what coru.dev / Koru is and how the fully autonomous refactor algorithm works — driving external IDEs, vendor CLIs, or headless LLMs (local or OpenRouter).">
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #ec4899;
+    --background: #0f172a;
+    --surface: #1e293b;
+    --surface-light: #334155;
+    --text: #f1f5f9;
+    --text-muted: #cbd5e1;
+    --border: #475569;
+    --success: #10b981;
+    --warning: #f59e0b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    overflow: hidden;
+}
+.deck { height: 100%; position: relative; }
+.slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6vh 8vw;
+    text-align: center;
+}
+.slide.is-active { display: flex; }
+.slide > * { opacity: 0; transform: translateY(14px); animation: rise .55s ease forwards; }
+.slide > *:nth-child(2) { animation-delay: .12s; }
+.slide > *:nth-child(3) { animation-delay: .24s; }
+.slide > *:nth-child(4) { animation-delay: .36s; }
+.slide > *:nth-child(5) { animation-delay: .48s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .slide > * { animation: none; opacity: 1; transform: none; }
+}
+h1 { font-size: clamp(2.2rem, 6vw, 4rem); }
+h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); margin-bottom: 18px; }
+.eyebrow { color: var(--primary); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: .85rem; margin-bottom: 14px; }
+.sub { color: var(--text-muted); font-size: clamp(1rem, 2.2vw, 1.25rem); max-width: 760px; margin-top: 14px; line-height: 1.6; }
+.spiral { font-size: clamp(3rem, 9vw, 5.5rem); display: inline-block; animation: spin 14s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spiral { animation: none; } }
+
+.loop-band { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
+.loop-step {
+    padding: 10px 16px; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); color: var(--text-muted); font-weight: 600; font-size: .95rem;
+}
+.loop-step strong { color: var(--text); }
+.loop-arrow { align-self: center; color: var(--primary); font-weight: 700; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 26px; max-width: 980px; width: 100%; }
+.card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 18px; text-align: left;
+}
+.card .icon { font-size: 1.8rem; }
+.card h3 { margin: 10px 0 8px; font-size: 1.05rem; }
+.card p { color: var(--text-muted); font-size: .92rem; line-height: 1.55; }
+.card .models { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+    font-size: .75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    background: rgba(99, 102, 241, .16); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, .4);
+}
+
+.term {
+    width: min(760px, 92%); margin-top: 24px; text-align: left;
+    background: #0b1120; border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 14px 44px rgba(0, 0, 0, .4); overflow: hidden;
+}
+.term__bar {
+    display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+    background: var(--surface-light); border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted);
+}
+.term__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.term__dot--r { background: #ef4444; } .term__dot--y { background: var(--warning); } .term__dot--g { background: var(--success); }
+.term__screen {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .85rem; line-height: 1.7; padding: 16px 18px; min-height: 215px;
+    white-space: pre-wrap; word-break: break-word;
+}
+.t-cmd { color: var(--text); font-weight: 600; }
+.t-out { color: var(--text-muted); }
+.t-ok  { color: var(--success); }
+.t-err { color: var(--warning); }
+.t-cursor { color: var(--primary); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.nav {
+    position: fixed; bottom: 22px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 18px; z-index: 5;
+}
+.nav button {
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px; font-size: .95rem; cursor: pointer;
+}
+.nav button:hover { border-color: var(--primary); }
+.dots { display: flex; gap: 8px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--surface-light); border: 1px solid var(--border); cursor: pointer; }
+.dot.is-active { background: var(--primary); border-color: var(--primary); }
+.hint { position: fixed; top: 18px; right: 22px; color: var(--text-muted); font-size: .8rem; opacity: .75; }
+.cta { display: inline-block; margin-top: 26px; padding: 13px 26px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: 700; text-decoration: none; }
+.cta:hover { background: var(--primary-dark); }
+a.plain { color: #a5b4fc; text-decoration: none; }
+.code-inline { font-family: ui-monospace, Menlo, monospace; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: .9em; }
+</style>
+</head>
+<body>
+<div class="hint">← → / space · click dots</div>
+<div class="deck" id="deck">
+
+<section class="slide" data-slide>
+    <div><span class="spiral">🌀</span></div>
+    <h1>coru.dev</h1>
+    <p class="sub"><strong>Koru</strong> — the open-source, fully autonomous refactor loop.<br>
+    It finds the debt, plans the work, drives an AI to fix it, verifies everything, and repeats. While you sleep.</p>
+    <div class="loop-band">
+        <span class="loop-step">Detect</span><span class="loop-arrow">→</span>
+        <span class="loop-step">Plan</span><span class="loop-arrow">→</span>
+        <span class="loop-step">Execute</span><span class="loop-arrow">→</span>
+        <span class="loop-step">Verify</span><span class="loop-arrow">→</span>
+        <span class="loop-step">Heal</span><span class="loop-arrow">→</span>
+        <span class="loop-step"><strong>Repeat</strong></span>
+    </div>
+</section>
+
+<section class="slide" data-slide>
+    <p class="eyebrow">The problem</p>
+    <h2>Tech debt grows faster than you can pay it down</h2>
+    <p class="sub">Complexity creeps in with every sprint. Quality gates report the damage — but reports don't refactor code.
+    AI editors can fix things — but somebody has to feed them tickets, check the results, and keep them honest, file after file, repo after repo.</p>
+    <div class="cards">
+        <div class="card"><div class="icon">📈</div><h3>Findings pile up</h3><p>Linters and gates produce lists. Lists become backlog noise nobody owns.</p></div>
+        <div class="card"><div class="icon">🖱️</div><h3>AI needs a driver</h3><p>Copy the prompt, paste the diff, run the tests, again and again. That's a loop — a machine's job.</p></div>
+        <div class="card"><div class="icon">🎲</div><h3>No verification, no trust</h3><p>Unverified AI edits are a regression lottery. Teams turn automation off after the first incident.</p></div>
+    </div>
+</section>
+
+<section class="slide" data-slide>
+    <p class="eyebrow">The answer</p>
+    <h2>A closed loop with a ticket queue at its heart</h2>
+    <p class="sub">Every finding becomes a scoped, deduplicated <em>planfile ticket</em>. The autonomous cycle takes the next ticket,
+    drives an executor, verifies with tests + quality gates (regix), records every step in an event log, and only then commits.
+    Red gates create new tickets — the loop feeds itself.</p>
+    <div class="term" aria-hidden="true">
+        <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;koru auto — live</div>
+        <div class="term__screen" data-term="loop"></div>
+    </div>
+</section>
+
+<section class="slide" data-slide>
+    <p class="eyebrow">Three ways to execute</p>
+    <h2>Your IDE, a vendor CLI, or a headless LLM</h2>
+    <div class="cards">
+        <div class="card">
+            <div class="icon">🧩</div><h3>External IDE</h3>
+            <p>Autopilot plugin drives the chat of your editor — paste, submit, verify — hands-off.</p>
+            <div class="models"><span class="chip">Windsurf</span><span class="chip">VS Code</span><span class="chip">Cursor</span><span class="chip">JetBrains</span><span class="chip">Antigravity</span></div>
+        </div>
+        <div class="card">
+            <div class="icon">⌨️</div><h3>Vendor CLI (tillm)</h3>
+            <p>Headless shell agents on any host — perfect for servers and CI. Auto-detected when no editor is running.</p>
+            <div class="models"><span class="chip">Claude Code</span><span class="chip">aider</span><span class="chip">codex</span><span class="chip">gemini-cli</span><span class="chip">opencode</span></div>
+        </div>
+        <div class="card">
+            <div class="icon">⇄</div><h3>Headless LLM</h3>
+            <p>Tickets go straight to a model API — OpenRouter or any local OpenAI-compatible endpoint — with per-run cost tracking.</p>
+            <div class="models"><span class="chip">MiniMax</span><span class="chip">Qwen3-coder</span><span class="chip">DeepSeek</span><span class="chip">local llama</span></div>
+        </div>
+    </div>
+    <p class="sub">One queue, one verification pipeline — the execution lane is just a setting. If a lane is unavailable, Koru rescues the drive through another one.</p>
+</section>
+
+<section class="slide" data-slide>
+    <p class="eyebrow">Watch it work</p>
+    <h2>Headless server, zero clicks</h2>
+    <div class="term" aria-hidden="true">
+        <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;ssh build-server</div>
+        <div class="term__screen" data-term="headless"></div>
+    </div>
+    <p class="sub">No editor installed? Koru picks a shell agent from PATH. No CLI either? Point it at OpenRouter with
+    <span class="code-inline">executor.kind=llm</span> and pick a model per ticket.</p>
+</section>
+
+<section class="slide" data-slide>
+    <p class="eyebrow">Trust, engineered</p>
+    <h2>Autonomy you can audit</h2>
+    <div class="cards">
+        <div class="card"><div class="icon">🎫</div><h3>Ticket-scoped changes</h3><p>Every edit traces back to a ticket with inputs, outputs, and history. Resumable after any interruption.</p></div>
+        <div class="card"><div class="icon">🛡️</div><h3>Gates before commit</h3><p>Tests, complexity and maintainability thresholds (regix), behavioral probes (TestQL) — red means no commit.</p></div>
+        <div class="card"><div class="icon">🩹</div><h3>Self-healing lanes</h3><p>CLI missing? Editor busy? The drive falls back across lanes (GUI driver, OS input) instead of stalling.</p></div>
+        <div class="card"><div class="icon">📊</div><h3>Event-sourced history</h3><p>JSONL event store + live dashboard. You can replay exactly what the loop did and why.</p></div>
+    </div>
+</section>
+
+<section class="slide" data-slide>
+    <p class="eyebrow">Get started</p>
+    <h2>Two commands. That's the whole onboarding.</h2>
+    <div class="term" aria-hidden="true">
+        <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;your repo</div>
+        <div class="term__screen" data-term="start"></div>
+    </div>
+    <p class="sub">
+        <a class="plain" href="https://www.coru.dev" target="_blank" rel="noopener">www.coru.dev</a> ·
+        <a class="plain" href="https://github.com/semcod/koru" target="_blank" rel="noopener">github.com/semcod/koru</a> ·
+        <a class="plain" href="https://pypi.org/project/koru/" target="_blank" rel="noopener">PyPI: koru</a>
+    </p>
+    <a class="cta" href="https://www.coru.dev" target="_blank" rel="noopener">Start your loop →</a>
+</section>
+
+</div>
+
+<div class="nav">
+    <button id="prev" aria-label="Previous slide">←</button>
+    <div class="dots" id="dots"></div>
+    <button id="next" aria-label="Next slide">→</button>
+</div>
+
+<script>
+const TERMS = {
+    loop: [
+        ['cmd', 'koru auto'],
+        ['out', '[koru] scan → 4 findings → 4 planfile tickets (deduplicated)'],
+        ['out', '[koru] ticket STARTER-201: Reduce CC in billing/engine.py (21 → ≤10)'],
+        ['out', '[koru] drive → executor · verify → pytest + regix gates'],
+        ['ok',  '✓ 312 tests passed · gates green · committed'],
+        ['out', '[koru] next ticket… (queue: 3 left)'],
+    ],
+    headless: [
+        ['cmd', 'koru auto'],
+        ['out', "[koru] no editor IDE detected; auto-selected shell client 'claude-code' (tillm)"],
+        ['out', '[koru] ticket STARTER-202 → drive → claude-code (profile: automation)'],
+        ['ok',  '✓ edits applied · tests green · commit pushed'],
+        ['cmd', 'KORU_TILLM_MODEL=qwen/qwen3-coder koru auto   # or minimax, deepseek…'],
+        ['out', '[koru] lane: openrouter · cost tracked per run ($0.004)'],
+    ],
+    start: [
+        ['cmd', 'pip install koru'],
+        ['out', 'Successfully installed koru'],
+        ['cmd', 'koru auto'],
+        ['out', '[koru] workspace scan → tickets → autonomous cycle started'],
+        ['ok',  '✓ your first automated, verified refactor is already in the queue'],
+    ],
+};
+
+const slides = Array.from(document.querySelectorAll('[data-slide]'));
+const dotsBox = document.getElementById('dots');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let index = 0;
+let termToken = 0;
+
+slides.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'dot';
+    d.addEventListener('click', () => go(i));
+    dotsBox.appendChild(d);
+});
+const dots = Array.from(dotsBox.children);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const CLS = { cmd: 't-cmd', out: 't-out', ok: 't-ok', err: 't-err' };
+
+async function playTerm(el, token) {
+    const script = TERMS[el.dataset.term] || [];
+    el.replaceChildren();
+    const cursor = document.createElement('span');
+    cursor.className = 't-cursor';
+    cursor.textContent = '▋';
+    el.appendChild(cursor);
+    for (const [type, text] of script) {
+        if (token !== termToken) return;
+        const line = document.createElement('span');
+        line.className = CLS[type];
+        el.insertBefore(line, cursor);
+        if (type === 'cmd' && !reduceMotion) {
+            line.textContent = '$ ';
+            await sleep(320);
+            for (const ch of text) {
+                if (token !== termToken) return;
+                line.textContent += ch;
+                await sleep(24);
+            }
+            line.textContent += '\n';
+            await sleep(380);
+        } else {
+            line.textContent = (type === 'cmd' ? '$ ' : '') + text + '\n';
+            if (!reduceMotion) await sleep(type === 'ok' ? 650 : 430);
+        }
+    }
+}
+
+function go(i) {
+    index = (i + slides.length) % slides.length;
+    slides.forEach((s, k) => s.classList.toggle('is-active', k === index));
+    dots.forEach((d, k) => d.classList.toggle('is-active', k === index));
+    location.hash = '#/' + (index + 1);
+    termToken += 1;
+    const term = slides[index].querySelector('[data-term]');
+    if (term) playTerm(term, termToken);
+}
+
+document.getElementById('prev').addEventListener('click', () => go(index - 1));
+document.getElementById('next').addEventListener('click', () => go(index + 1));
+document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); go(index + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(index - 1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(slides.length - 1);
+});
+
+const fromHash = parseInt((location.hash.match(/#\/(\d+)/) || [])[1], 10);
+go(Number.isFinite(fromHash) ? fromHash - 1 : 0);
+</script>
+</body>
+</html>
