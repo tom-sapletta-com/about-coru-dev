@@ -22,6 +22,9 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
+/* Fluid, uniform type scale: one root size drives every rem unit, so all
+   text grows/shrinks proportionally with the screen. */
+html { font-size: clamp(14px, 0.62vw + 10.6px, 24px); }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--background);
@@ -37,7 +40,7 @@ body {
 .slide {
     position: absolute; inset: 0;
     display: none; flex-direction: column; align-items: center; justify-content: center;
-    padding: 6vh 8vw; text-align: center;
+    padding: 5vh 4vw 11vh; text-align: center;
 }
 .slide.is-active { display: flex; }
 .slide > * { opacity: 0; transform: translateY(14px); animation: rise .55s ease forwards; }
@@ -49,37 +52,38 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .slide > * { animation: none; opacity: 1; transform: none; }
 }
-h1 { font-size: clamp(2.2rem, 6vw, 4rem); }
-h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); margin-bottom: 18px; }
-.eyebrow { color: var(--primary); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: .85rem; margin-bottom: 14px; }
-.sub { color: var(--text-muted); font-size: clamp(1rem, 2.2vw, 1.25rem); max-width: 760px; margin-top: 14px; line-height: 1.6; }
+h1 { font-size: 3.4rem; }
+h2 { font-size: 2.3rem; margin-bottom: 0.8em; }
+.eyebrow { color: var(--primary); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 0.9em; }
+.sub { color: var(--text-muted); font-size: 1.15rem; max-width: 62rem; margin-top: 0.9em; line-height: 1.6; }
 .spiral-wrap { color: var(--primary); }
-.spiral-wrap .svgi { width: clamp(3.2rem, 9vw, 5.6rem); height: clamp(3.2rem, 9vw, 5.6rem); stroke-width: 1.6; animation: spin 14s linear infinite; }
+.spiral-wrap .svgi { width: 4.6rem; height: 4.6rem; stroke-width: 1.6; animation: spin 14s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spiral-wrap .svgi { animation: none; } }
 
 .loop-band { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
 .loop-step {
-    padding: 10px 16px; border: 1px solid var(--border); border-radius: 999px;
-    background: var(--surface); color: var(--text-muted); font-weight: 600; font-size: .95rem;
+    font-size: 1.05rem;
+    padding: 0.6em 1em; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); color: var(--text-muted); font-weight: 600;
 }
 .loop-step strong { color: var(--text); }
 .loop-arrow { align-self: center; color: var(--primary); font-weight: 700; }
 
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 26px; max-width: 980px; width: 100%; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 18px; text-align: left; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1.6em; max-width: min(96rem, 96vw); width: 100%; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.35em 1.1em; text-align: left; }
 .card .icon { color: var(--primary); }
 .card .icon .svgi { width: 1.9rem; height: 1.9rem; }
-.card h3 { margin: 10px 0 8px; font-size: 1.05rem; }
-.card p { color: var(--text-muted); font-size: .92rem; line-height: 1.55; }
+.card h3 { margin: 0.6em 0 0.45em; font-size: 1.1rem; }
+.card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.55; }
 .card .models { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
-    font-size: .75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600; padding: 0.2em 0.75em; border-radius: 999px;
     background: rgba(99, 102, 241, .16); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, .4);
 }
 
 .term {
-    width: min(760px, 92%); margin-top: 24px; text-align: left;
+    width: min(72rem, 96%); margin-top: 1.4em; text-align: left;
     background: #0b1120; border: 1px solid var(--border); border-radius: 12px;
     box-shadow: 0 14px 44px rgba(0, 0, 0, .4); overflow: hidden;
 }
@@ -92,7 +96,7 @@ h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); margin-bottom: 18px; }
 .term__dot--r { background: #ef4444; } .term__dot--y { background: var(--warning); } .term__dot--g { background: var(--success); }
 .term__screen {
     font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: .85rem; line-height: 1.7; padding: 16px 18px; min-height: 215px;
+    font-size: 1rem; line-height: 1.7; padding: 1em 1.15em; min-height: 13.5em;
     white-space: pre-wrap; word-break: break-word;
 }
 .t-cmd { color: var(--text); font-weight: 600; }
