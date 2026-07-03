@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>coru.dev — the autonomous refactor loop</title>
 <meta name="description" content="Animated presentation: what coru.dev / Koru is and how the fully autonomous refactor algorithm works — driving external IDEs, vendor CLIs, or headless LLMs (local or OpenRouter).">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round'><path d='M12 12a.75.75 0 0 1 .75.75A2.25 2.25 0 0 1 10.5 15 4 4 0 0 1 6.5 11 6 6 0 0 1 12.5 5 8 8 0 0 1 20.5 13 10 10 0 0 1 10.5 23'/></svg>">
 <style>
 :root {
     --primary: #6366f1;
@@ -27,15 +28,16 @@ body {
     color: var(--text);
     overflow: hidden;
 }
+.svgi {
+    width: 1.1em; height: 1.1em; display: inline-block; vertical-align: -0.16em;
+    fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+}
 .deck { height: 100%; position: relative; }
 .slide {
     position: absolute; inset: 0;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 6vh 8vw;
-    text-align: center;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 6vh 8vw; text-align: center;
 }
 .slide.is-active { display: flex; }
 .slide > * { opacity: 0; transform: translateY(14px); animation: rise .55s ease forwards; }
@@ -51,9 +53,10 @@ h1 { font-size: clamp(2.2rem, 6vw, 4rem); }
 h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); margin-bottom: 18px; }
 .eyebrow { color: var(--primary); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: .85rem; margin-bottom: 14px; }
 .sub { color: var(--text-muted); font-size: clamp(1rem, 2.2vw, 1.25rem); max-width: 760px; margin-top: 14px; line-height: 1.6; }
-.spiral { font-size: clamp(3rem, 9vw, 5.5rem); display: inline-block; animation: spin 14s linear infinite; }
+.spiral-wrap { color: var(--primary); }
+.spiral-wrap .svgi { width: clamp(3.2rem, 9vw, 5.6rem); height: clamp(3.2rem, 9vw, 5.6rem); stroke-width: 1.6; animation: spin 14s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spiral { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .spiral-wrap .svgi { animation: none; } }
 
 .loop-band { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
 .loop-step {
@@ -64,11 +67,9 @@ h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); margin-bottom: 18px; }
 .loop-arrow { align-self: center; color: var(--primary); font-weight: 700; }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 26px; max-width: 980px; width: 100%; }
-.card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 22px 18px; text-align: left;
-}
-.card .icon { font-size: 1.8rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 18px; text-align: left; }
+.card .icon { color: var(--primary); }
+.card .icon .svgi { width: 1.9rem; height: 1.9rem; }
 .card h3 { margin: 10px 0 8px; font-size: 1.05rem; }
 .card p { color: var(--text-muted); font-size: .92rem; line-height: 1.55; }
 .card .models { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -114,6 +115,13 @@ h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); margin-bottom: 18px; }
 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--surface-light); border: 1px solid var(--border); cursor: pointer; }
 .dot.is-active { background: var(--primary); border-color: var(--primary); }
 .hint { position: fixed; top: 18px; right: 22px; color: var(--text-muted); font-size: .8rem; opacity: .75; }
+.langbar { position: fixed; top: 14px; left: 18px; display: flex; gap: 6px; z-index: 6; }
+.langbar button {
+    background: var(--surface); color: var(--text-muted); border: 1px solid var(--border);
+    border-radius: 7px; padding: 5px 11px; font-size: .8rem; font-weight: 700; cursor: pointer; letter-spacing: .04em;
+}
+.langbar button:hover { border-color: var(--primary); color: var(--text); }
+.langbar button.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
 .cta { display: inline-block; margin-top: 26px; padding: 13px 26px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: 700; text-decoration: none; }
 .cta:hover { background: var(--primary-dark); }
 a.plain { color: #a5b4fc; text-decoration: none; }
@@ -121,42 +129,59 @@ a.plain { color: #a5b4fc; text-decoration: none; }
 </style>
 </head>
 <body>
-<div class="hint">← → / space · click dots</div>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="i-spiral" viewBox="0 0 24 24"><path d="M12 12a.75.75 0 0 1 .75.75A2.25 2.25 0 0 1 10.5 15 4 4 0 0 1 6.5 11 6 6 0 0 1 12.5 5 8 8 0 0 1 20.5 13 10 10 0 0 1 10.5 23"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 8h16v3a1.5 1.5 0 0 0 0 3v3H4v-3a1.5 1.5 0 0 0 0-3z"/><path d="M9.5 8v2M9.5 13v1M9.5 16v1" stroke-dasharray="1.5 2.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 2.8V11c0 4.7-3.2 7.9-7 10-3.8-2.1-7-5.3-7-10V5.8z"/><path d="M9 11.5l2.2 2.2L15.5 9"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16M7 20v-6M12 20V7M17 20v-9"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9 4h5v3.2a1.8 1.8 0 1 0 3.6 0V4H20v5h-2.8a1.8 1.8 0 1 0 0 3.6H20V20h-5v-3.2a1.8 1.8 0 1 0-3.6 0V20H4v-5h2.8a1.8 1.8 0 1 0 0-3.6H4V9h5z"/></symbol>
+    <symbol id="i-bandage" viewBox="0 0 24 24"><rect x="2.8" y="8.2" width="18.4" height="7.6" rx="3.8" transform="rotate(-45 12 12)"/><path d="M10.8 10.8l.01.01M13.2 10.8l.01.01M10.8 13.2l.01.01M13.2 13.2l.01.01"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h13M14 4.5L17.5 8 14 11.5M20 16H7M10 12.5L6.5 16l3.5 3.5"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M6.5 10.5h.01M9.5 10.5h.01M12.5 10.5h.01M15.5 10.5h.01M6.5 13.5h.01M9 13.5h6M17.5 13.5h.01M17.5 10.5h.01"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+    <symbol id="i-cursor" viewBox="0 0 24 24"><path d="M5.5 3.5l7 16.5 2.2-6.8 6.8-2.2z"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="0.8" fill="currentColor"/><circle cx="15.5" cy="8.5" r="0.8" fill="currentColor"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/><circle cx="8.5" cy="15.5" r="0.8" fill="currentColor"/><circle cx="15.5" cy="15.5" r="0.8" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="langbar" id="langbar" aria-label="Language">
+    <button data-lang="en" aria-label="English">EN</button>
+    <button data-lang="pl" aria-label="Polski">PL</button>
+    <button data-lang="de" aria-label="Deutsch">DE</button>
+</div>
+<div class="hint" data-i18n="hint">← → / space · click dots</div>
 <div class="deck" id="deck">
 
 <section class="slide" data-slide>
-    <div><span class="spiral">🌀</span></div>
+    <div class="spiral-wrap"><svg class="svgi" aria-hidden="true"><use href="#i-spiral"/></svg></div>
     <h1>coru.dev</h1>
-    <p class="sub"><strong>Koru</strong> — the open-source, fully autonomous refactor loop.<br>
-    It finds the debt, plans the work, drives an AI to fix it, verifies everything, and repeats. While you sleep.</p>
+    <p class="sub" data-i18n="s1.sub"></p>
     <div class="loop-band">
-        <span class="loop-step">Detect</span><span class="loop-arrow">→</span>
-        <span class="loop-step">Plan</span><span class="loop-arrow">→</span>
-        <span class="loop-step">Execute</span><span class="loop-arrow">→</span>
-        <span class="loop-step">Verify</span><span class="loop-arrow">→</span>
-        <span class="loop-step">Heal</span><span class="loop-arrow">→</span>
-        <span class="loop-step"><strong>Repeat</strong></span>
+        <span class="loop-step" data-i18n="loop.detect">Detect</span><span class="loop-arrow">→</span>
+        <span class="loop-step" data-i18n="loop.plan">Plan</span><span class="loop-arrow">→</span>
+        <span class="loop-step" data-i18n="loop.execute">Execute</span><span class="loop-arrow">→</span>
+        <span class="loop-step" data-i18n="loop.verify">Verify</span><span class="loop-arrow">→</span>
+        <span class="loop-step" data-i18n="loop.heal">Heal</span><span class="loop-arrow">→</span>
+        <span class="loop-step"><strong data-i18n="loop.repeat">Repeat</strong></span>
     </div>
 </section>
 
 <section class="slide" data-slide>
-    <p class="eyebrow">The problem</p>
-    <h2>Tech debt grows faster than you can pay it down</h2>
-    <p class="sub">Complexity creeps in with every sprint. Quality gates report the damage — but reports don't refactor code.
-    AI editors can fix things — but somebody has to feed them tickets, check the results, and keep them honest, file after file, repo after repo.</p>
+    <p class="eyebrow" data-i18n="s2.eyebrow"></p>
+    <h2 data-i18n="s2.h"></h2>
+    <p class="sub" data-i18n="s2.sub"></p>
     <div class="cards">
-        <div class="card"><div class="icon">📈</div><h3>Findings pile up</h3><p>Linters and gates produce lists. Lists become backlog noise nobody owns.</p></div>
-        <div class="card"><div class="icon">🖱️</div><h3>AI needs a driver</h3><p>Copy the prompt, paste the diff, run the tests, again and again. That's a loop — a machine's job.</p></div>
-        <div class="card"><div class="icon">🎲</div><h3>No verification, no trust</h3><p>Unverified AI edits are a regression lottery. Teams turn automation off after the first incident.</p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-trend"/></svg></div><h3 data-i18n="s2.c1h"></h3><p data-i18n="s2.c1p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-cursor"/></svg></div><h3 data-i18n="s2.c2h"></h3><p data-i18n="s2.c2p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-dice"/></svg></div><h3 data-i18n="s2.c3h"></h3><p data-i18n="s2.c3p"></p></div>
     </div>
 </section>
 
 <section class="slide" data-slide>
-    <p class="eyebrow">The answer</p>
-    <h2>A closed loop with a ticket queue at its heart</h2>
-    <p class="sub">Every finding becomes a scoped, deduplicated <em>planfile ticket</em>. The autonomous cycle takes the next ticket,
-    drives an executor, verifies with tests + quality gates (regix), records every step in an event log, and only then commits.
-    Red gates create new tickets — the loop feeds itself.</p>
+    <p class="eyebrow" data-i18n="s3.eyebrow"></p>
+    <h2 data-i18n="s3.h"></h2>
+    <p class="sub" data-i18n="s3.sub"></p>
     <div class="term" aria-hidden="true">
         <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;koru auto — live</div>
         <div class="term__screen" data-term="loop"></div>
@@ -164,55 +189,54 @@ a.plain { color: #a5b4fc; text-decoration: none; }
 </section>
 
 <section class="slide" data-slide>
-    <p class="eyebrow">Three ways to execute</p>
-    <h2>Your IDE, a vendor CLI, or a headless LLM</h2>
+    <p class="eyebrow" data-i18n="s4.eyebrow"></p>
+    <h2 data-i18n="s4.h"></h2>
     <div class="cards">
         <div class="card">
-            <div class="icon">🧩</div><h3>External IDE</h3>
-            <p>Autopilot plugin drives the chat of your editor — paste, submit, verify — hands-off.</p>
+            <div class="icon"><svg class="svgi"><use href="#i-puzzle"/></svg></div><h3 data-i18n="s4.c1h"></h3>
+            <p data-i18n="s4.c1p"></p>
             <div class="models"><span class="chip">Windsurf</span><span class="chip">VS Code</span><span class="chip">Cursor</span><span class="chip">JetBrains</span><span class="chip">Antigravity</span></div>
         </div>
         <div class="card">
-            <div class="icon">⌨️</div><h3>Vendor CLI (tillm)</h3>
-            <p>Headless shell agents on any host — perfect for servers and CI. Auto-detected when no editor is running.</p>
+            <div class="icon"><svg class="svgi"><use href="#i-keyboard"/></svg></div><h3 data-i18n="s4.c2h"></h3>
+            <p data-i18n="s4.c2p"></p>
             <div class="models"><span class="chip">Claude Code</span><span class="chip">aider</span><span class="chip">codex</span><span class="chip">gemini-cli</span><span class="chip">opencode</span></div>
         </div>
         <div class="card">
-            <div class="icon">⇄</div><h3>Headless LLM</h3>
-            <p>Tickets go straight to a model API — OpenRouter or any local OpenAI-compatible endpoint — with per-run cost tracking.</p>
+            <div class="icon"><svg class="svgi"><use href="#i-swap"/></svg></div><h3 data-i18n="s4.c3h"></h3>
+            <p data-i18n="s4.c3p"></p>
             <div class="models"><span class="chip">MiniMax</span><span class="chip">Qwen3-coder</span><span class="chip">DeepSeek</span><span class="chip">local llama</span></div>
         </div>
     </div>
-    <p class="sub">One queue, one verification pipeline — the execution lane is just a setting. If a lane is unavailable, Koru rescues the drive through another one.</p>
+    <p class="sub" data-i18n="s4.sub"></p>
 </section>
 
 <section class="slide" data-slide>
-    <p class="eyebrow">Watch it work</p>
-    <h2>Headless server, zero clicks</h2>
+    <p class="eyebrow" data-i18n="s5.eyebrow"></p>
+    <h2 data-i18n="s5.h"></h2>
     <div class="term" aria-hidden="true">
         <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;ssh build-server</div>
         <div class="term__screen" data-term="headless"></div>
     </div>
-    <p class="sub">No editor installed? Koru picks a shell agent from PATH. No CLI either? Point it at OpenRouter with
-    <span class="code-inline">executor.kind=llm</span> and pick a model per ticket.</p>
+    <p class="sub"><span data-i18n="s5.sub1"></span> <span class="code-inline">executor.kind=llm</span> <span data-i18n="s5.sub2"></span></p>
 </section>
 
 <section class="slide" data-slide>
-    <p class="eyebrow">Trust, engineered</p>
-    <h2>Autonomy you can audit</h2>
+    <p class="eyebrow" data-i18n="s6.eyebrow"></p>
+    <h2 data-i18n="s6.h"></h2>
     <div class="cards">
-        <div class="card"><div class="icon">🎫</div><h3>Ticket-scoped changes</h3><p>Every edit traces back to a ticket with inputs, outputs, and history. Resumable after any interruption.</p></div>
-        <div class="card"><div class="icon">🛡️</div><h3>Gates before commit</h3><p>Tests, complexity and maintainability thresholds (regix), behavioral probes (TestQL) — red means no commit.</p></div>
-        <div class="card"><div class="icon">🩹</div><h3>Self-healing lanes</h3><p>CLI missing? Editor busy? The drive falls back across lanes (GUI driver, OS input) instead of stalling.</p></div>
-        <div class="card"><div class="icon">📊</div><h3>Event-sourced history</h3><p>JSONL event store + live dashboard. You can replay exactly what the loop did and why.</p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-ticket"/></svg></div><h3 data-i18n="s6.c1h"></h3><p data-i18n="s6.c1p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-shield"/></svg></div><h3 data-i18n="s6.c2h"></h3><p data-i18n="s6.c2p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-bandage"/></svg></div><h3 data-i18n="s6.c3h"></h3><p data-i18n="s6.c3p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-chart"/></svg></div><h3 data-i18n="s6.c4h"></h3><p data-i18n="s6.c4p"></p></div>
     </div>
 </section>
 
 <section class="slide" data-slide>
-    <p class="eyebrow">Get started</p>
-    <h2>Two commands. That's the whole onboarding.</h2>
+    <p class="eyebrow" data-i18n="s7.eyebrow"></p>
+    <h2 data-i18n="s7.h"></h2>
     <div class="term" aria-hidden="true">
-        <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;your repo</div>
+        <div class="term__bar"><span class="term__dot term__dot--r"></span><span class="term__dot term__dot--y"></span><span class="term__dot term__dot--g"></span>&nbsp;<span data-i18n="s7.term"></span></div>
         <div class="term__screen" data-term="start"></div>
     </div>
     <p class="sub">
@@ -220,7 +244,7 @@ a.plain { color: #a5b4fc; text-decoration: none; }
         <a class="plain" href="https://github.com/semcod/koru" target="_blank" rel="noopener">github.com/semcod/koru</a> ·
         <a class="plain" href="https://pypi.org/project/koru/" target="_blank" rel="noopener">PyPI: koru</a>
     </p>
-    <a class="cta" href="https://www.coru.dev" target="_blank" rel="noopener">Start your loop →</a>
+    <a class="cta" href="https://www.coru.dev" target="_blank" rel="noopener" data-i18n="s7.cta"></a>
 </section>
 
 </div>
@@ -232,12 +256,120 @@ a.plain { color: #a5b4fc; text-decoration: none; }
 </div>
 
 <script>
+const I18N = {
+    en: {
+        'hint': '← → / space · click dots',
+        'loop.detect': 'Detect', 'loop.plan': 'Plan', 'loop.execute': 'Execute',
+        'loop.verify': 'Verify', 'loop.heal': 'Heal', 'loop.repeat': 'Repeat',
+        's1.sub': 'Koru — the open-source, fully autonomous refactor loop. It finds the debt, plans the work, drives an AI to fix it, verifies everything, and repeats. While you sleep.',
+        's2.eyebrow': 'The problem',
+        's2.h': 'Tech debt grows faster than you can pay it down',
+        's2.sub': "Complexity creeps in with every sprint. Quality gates report the damage — but reports don't refactor code. AI editors can fix things — but somebody has to feed them tickets, check the results, and keep them honest.",
+        's2.c1h': 'Findings pile up', 's2.c1p': 'Linters and gates produce lists. Lists become backlog noise nobody owns.',
+        's2.c2h': 'AI needs a driver', 's2.c2p': "Copy the prompt, paste the diff, run the tests, again and again. That's a loop — a machine's job.",
+        's2.c3h': 'No verification, no trust', 's2.c3p': 'Unverified AI edits are a regression lottery. Teams turn automation off after the first incident.',
+        's3.eyebrow': 'The answer',
+        's3.h': 'A closed loop with a ticket queue at its heart',
+        's3.sub': 'Every finding becomes a scoped, deduplicated planfile ticket. The autonomous cycle takes the next ticket, drives an executor, verifies with tests + quality gates, records every step in an event log, and only then commits. Red gates create new tickets — the loop feeds itself.',
+        's4.eyebrow': 'Three ways to execute',
+        's4.h': 'Your IDE, a vendor CLI, or a headless LLM',
+        's4.c1h': 'External IDE', 's4.c1p': 'Autopilot plugin drives the chat of your editor — paste, submit, verify — hands-off.',
+        's4.c2h': 'Vendor CLI (tillm)', 's4.c2p': 'Headless shell agents on any host — perfect for servers and CI. Auto-detected when no editor is running.',
+        's4.c3h': 'Headless LLM', 's4.c3p': 'Tickets go straight to a model API — OpenRouter or any local OpenAI-compatible endpoint — with per-run cost tracking.',
+        's4.sub': 'One queue, one verification pipeline — the execution lane is just a setting. If a lane is unavailable, Koru rescues the drive through another one.',
+        's5.eyebrow': 'Watch it work',
+        's5.h': 'Headless server, zero clicks',
+        's5.sub1': 'No editor installed? Koru picks a shell agent from PATH. No CLI either? Point it at OpenRouter with',
+        's5.sub2': 'and pick a model per ticket.',
+        's6.eyebrow': 'Trust, engineered',
+        's6.h': 'Autonomy you can audit',
+        's6.c1h': 'Ticket-scoped changes', 's6.c1p': 'Every edit traces back to a ticket with inputs, outputs, and history. Resumable after any interruption.',
+        's6.c2h': 'Gates before commit', 's6.c2p': 'Tests, complexity and maintainability thresholds, behavioral probes — red means no commit.',
+        's6.c3h': 'Self-healing lanes', 's6.c3p': 'CLI missing? Editor busy? The drive falls back across lanes (GUI driver, OS input) instead of stalling.',
+        's6.c4h': 'Event-sourced history', 's6.c4p': 'JSONL event store + live dashboard. You can replay exactly what the loop did and why.',
+        's7.eyebrow': 'Get started',
+        's7.h': "Two commands. That's the whole onboarding.",
+        's7.term': 'your repo',
+        's7.cta': 'Start your loop →',
+    },
+    pl: {
+        'hint': '← → / spacja · klikaj kropki',
+        'loop.detect': 'Wykryj', 'loop.plan': 'Zaplanuj', 'loop.execute': 'Wykonaj',
+        'loop.verify': 'Zweryfikuj', 'loop.heal': 'Napraw', 'loop.repeat': 'Powtórz',
+        's1.sub': 'Koru — otwartoźródłowa, w pełni autonomiczna pętla refaktoryzacji. Znajduje dług techniczny, planuje pracę, zleca ją AI, wszystko weryfikuje i powtarza. Kiedy Ty śpisz.',
+        's2.eyebrow': 'Problem',
+        's2.h': 'Dług techniczny rośnie szybciej, niż da się go spłacać',
+        's2.sub': 'Złożoność wkrada się z każdym sprintem. Bramki jakości raportują szkody — ale raporty nie refaktoryzują kodu. Edytory AI potrafią naprawiać — ale ktoś musi podawać im zadania, sprawdzać wyniki i pilnować uczciwości.',
+        's2.c1h': 'Znaleziska się piętrzą', 's2.c1p': 'Lintery i bramki produkują listy. Listy stają się szumem backlogu, którego nikt nie ogarnia.',
+        's2.c2h': 'AI potrzebuje kierowcy', 's2.c2p': 'Skopiuj prompt, wklej diff, odpal testy — w kółko. To pętla, czyli robota dla maszyny.',
+        's2.c3h': 'Bez weryfikacji nie ma zaufania', 's2.c3p': 'Niezweryfikowane zmiany AI to loteria regresji. Zespoły wyłączają automatyzację po pierwszym incydencie.',
+        's3.eyebrow': 'Odpowiedź',
+        's3.h': 'Zamknięta pętla z kolejką zadań w sercu',
+        's3.sub': 'Każde znalezisko staje się precyzyjnie zakreślonym, deduplikowanym ticketem planfile. Autonomiczny cykl bierze kolejny ticket, uruchamia wykonawcę, weryfikuje testami i bramkami jakości, zapisuje każdy krok w dzienniku zdarzeń — i dopiero wtedy commituje. Czerwone bramki tworzą nowe tickety — pętla karmi się sama.',
+        's4.eyebrow': 'Trzy sposoby wykonania',
+        's4.h': 'Twoje IDE, CLI dostawcy albo headless LLM',
+        's4.c1h': 'Zewnętrzne IDE', 's4.c1p': 'Plugin autopilota steruje czatem Twojego edytora — wkleja, wysyła, weryfikuje — bez dotykania klawiatury.',
+        's4.c2h': 'CLI dostawcy (tillm)', 's4.c2p': 'Headlessowe agenty shellowe na dowolnym hoście — idealne na serwery i CI. Wykrywane automatycznie, gdy nie działa żaden edytor.',
+        's4.c3h': 'Headless LLM', 's4.c3p': 'Tickety trafiają wprost do API modelu — OpenRouter albo dowolny lokalny endpoint zgodny z OpenAI — ze śledzeniem kosztów per przebieg.',
+        's4.sub': 'Jedna kolejka, jeden pipeline weryfikacji — tor wykonania to tylko ustawienie. Gdy jeden tor zawodzi, Koru ratuje przejazd innym.',
+        's5.eyebrow': 'Zobacz w akcji',
+        's5.h': 'Serwer bez ekranu, zero kliknięć',
+        's5.sub1': 'Brak edytora? Koru wybierze agenta CLI z PATH. Brak i tego? Wskaż OpenRouter przez',
+        's5.sub2': 'i wybieraj model per ticket.',
+        's6.eyebrow': 'Zaufanie z inżynierską gwarancją',
+        's6.h': 'Autonomia, którą można audytować',
+        's6.c1h': 'Zmiany w zakresie ticketu', 's6.c1p': 'Każda edycja prowadzi do ticketu z wejściami, wyjściami i historią. Wznawialne po każdej przerwie.',
+        's6.c2h': 'Bramki przed commitem', 's6.c2p': 'Testy, progi złożoności i utrzymywalności, sondy behawioralne — czerwone znaczy brak commita.',
+        's6.c3h': 'Samonaprawialne tory', 's6.c3p': 'Brak CLI? Edytor zajęty? Przejazd spada na kolejne tory (sterownik GUI, wejście OS), zamiast blokować pętlę.',
+        's6.c4h': 'Historia event-sourced', 's6.c4p': 'Magazyn zdarzeń JSONL + żywy dashboard. Możesz odtworzyć dokładnie, co pętla zrobiła i dlaczego.',
+        's7.eyebrow': 'Zacznij teraz',
+        's7.h': 'Dwie komendy. Tyle trwa całe wdrożenie.',
+        's7.term': 'twoje repo',
+        's7.cta': 'Uruchom swoją pętlę →',
+    },
+    de: {
+        'hint': '← → / Leertaste · Punkte anklicken',
+        'loop.detect': 'Erkennen', 'loop.plan': 'Planen', 'loop.execute': 'Ausführen',
+        'loop.verify': 'Verifizieren', 'loop.heal': 'Heilen', 'loop.repeat': 'Wiederholen',
+        's1.sub': 'Koru — die quelloffene, vollständig autonome Refactoring-Schleife. Sie findet die technischen Schulden, plant die Arbeit, lässt eine KI sie beheben, verifiziert alles und wiederholt den Zyklus. Während Sie schlafen.',
+        's2.eyebrow': 'Das Problem',
+        's2.h': 'Technische Schulden wachsen schneller, als man sie abbauen kann',
+        's2.sub': 'Mit jedem Sprint schleicht sich Komplexität ein. Quality Gates melden den Schaden — aber Berichte refaktorisieren keinen Code. KI-Editoren können reparieren — aber jemand muss ihnen Tickets zuführen, Ergebnisse prüfen und sie ehrlich halten.',
+        's2.c1h': 'Befunde stapeln sich', 's2.c1p': 'Linter und Gates erzeugen Listen. Listen werden zu Backlog-Rauschen, das niemandem gehört.',
+        's2.c2h': 'KI braucht einen Fahrer', 's2.c2p': 'Prompt kopieren, Diff einfügen, Tests laufen lassen — immer wieder. Das ist eine Schleife, also ein Job für eine Maschine.',
+        's2.c3h': 'Ohne Verifikation kein Vertrauen', 's2.c3p': 'Unverifizierte KI-Änderungen sind eine Regressionslotterie. Teams schalten die Automatisierung nach dem ersten Vorfall ab.',
+        's3.eyebrow': 'Die Antwort',
+        's3.h': 'Eine geschlossene Schleife mit einer Ticket-Queue im Kern',
+        's3.sub': 'Jeder Befund wird zu einem klar umrissenen, deduplizierten Planfile-Ticket. Der autonome Zyklus nimmt das nächste Ticket, steuert einen Executor, verifiziert mit Tests und Quality Gates, protokolliert jeden Schritt im Event-Log — und committet erst dann. Rote Gates erzeugen neue Tickets — die Schleife versorgt sich selbst.',
+        's4.eyebrow': 'Drei Wege der Ausführung',
+        's4.h': 'Ihre IDE, ein Vendor-CLI oder ein Headless-LLM',
+        's4.c1h': 'Externe IDE', 's4.c1p': 'Das Autopilot-Plugin steuert den Chat Ihres Editors — einfügen, absenden, verifizieren — völlig freihändig.',
+        's4.c2h': 'Vendor-CLI (tillm)', 's4.c2p': 'Headless-Shell-Agenten auf jedem Host — ideal für Server und CI. Automatisch erkannt, wenn kein Editor läuft.',
+        's4.c3h': 'Headless-LLM', 's4.c3p': 'Tickets gehen direkt an eine Modell-API — OpenRouter oder ein lokaler OpenAI-kompatibler Endpunkt — mit Kostenverfolgung pro Lauf.',
+        's4.sub': 'Eine Queue, eine Verifikations-Pipeline — der Ausführungsweg ist nur eine Einstellung. Fällt ein Weg aus, rettet Koru den Lauf über einen anderen.',
+        's5.eyebrow': 'In Aktion',
+        's5.h': 'Headless-Server, null Klicks',
+        's5.sub1': 'Kein Editor installiert? Koru wählt einen Shell-Agenten aus dem PATH. Auch kein CLI? Verbinden Sie OpenRouter über',
+        's5.sub2': 'und wählen Sie das Modell pro Ticket.',
+        's6.eyebrow': 'Vertrauen, konstruiert',
+        's6.h': 'Autonomie, die Sie auditieren können',
+        's6.c1h': 'Ticket-gebundene Änderungen', 's6.c1p': 'Jede Änderung führt zu einem Ticket mit Eingaben, Ausgaben und Historie. Nach jeder Unterbrechung fortsetzbar.',
+        's6.c2h': 'Gates vor dem Commit', 's6.c2p': 'Tests, Komplexitäts- und Wartbarkeitsschwellen, Verhaltenssonden — rot heißt kein Commit.',
+        's6.c3h': 'Selbstheilende Wege', 's6.c3p': 'CLI fehlt? Editor beschäftigt? Der Lauf weicht auf andere Wege aus (GUI-Treiber, OS-Eingabe), statt stehenzubleiben.',
+        's6.c4h': 'Event-Sourced-Historie', 's6.c4p': 'JSONL-Event-Store + Live-Dashboard. Sie können exakt nachvollziehen, was die Schleife getan hat und warum.',
+        's7.eyebrow': 'Loslegen',
+        's7.h': 'Zwei Befehle. Das ist das ganze Onboarding.',
+        's7.term': 'Ihr Repo',
+        's7.cta': 'Starten Sie Ihre Schleife →',
+    },
+};
+
 const TERMS = {
     loop: [
         ['cmd', 'koru auto'],
         ['out', '[koru] scan → 4 findings → 4 planfile tickets (deduplicated)'],
         ['out', '[koru] ticket STARTER-201: Reduce CC in billing/engine.py (21 → ≤10)'],
-        ['out', '[koru] drive → executor · verify → pytest + regix gates'],
+        ['out', '[koru] drive → executor · verify → pytest + quality gates'],
         ['ok',  '✓ 312 tests passed · gates green · committed'],
         ['out', '[koru] next ticket… (queue: 3 left)'],
     ],
@@ -257,6 +389,31 @@ const TERMS = {
         ['ok',  '✓ your first automated, verified refactor is already in the queue'],
     ],
 };
+
+const LANG_KEY = 'coru-lang';
+const LANGS = ['en', 'pl', 'de'];
+
+function detectLang() {
+    try {
+        const saved = localStorage.getItem(LANG_KEY);
+        if (LANGS.includes(saved)) return saved;
+    } catch (e) {}
+    const nav = (navigator.languages || [navigator.language || 'en']).map((l) => (l || '').slice(0, 2).toLowerCase());
+    return nav.find((l) => LANGS.includes(l)) || 'en';
+}
+
+function applyLang(lang) {
+    const dict = I18N[lang] || I18N.en;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const val = dict[el.dataset.i18n];
+        if (val !== undefined) el.textContent = val;
+    });
+    document.querySelectorAll('#langbar button').forEach((b) => b.classList.toggle('is-active', b.dataset.lang === lang));
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+}
+
+document.querySelectorAll('#langbar button').forEach((b) => b.addEventListener('click', () => applyLang(b.dataset.lang)));
 
 const slides = Array.from(document.querySelectorAll('[data-slide]'));
 const dotsBox = document.getElementById('dots');
@@ -323,6 +480,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'End') go(slides.length - 1);
 });
 
+applyLang(detectLang());
 const fromHash = parseInt((location.hash.match(/#\/(\d+)/) || [])[1], 10);
 go(Number.isFinite(fromHash) ? fromHash - 1 : 0);
 </script>
