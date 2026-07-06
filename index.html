@@ -8,8 +8,8 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round'><path d='M12 12a.75.75 0 0 1 .75.75A2.25 2.25 0 0 1 10.5 15 4 4 0 0 1 6.5 11 6 6 0 0 1 12.5 5 8 8 0 0 1 20.5 13 10 10 0 0 1 10.5 23'/></svg>">
 <style>
 :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
+    --primary: #818cf8;
+    --primary-dark: #6366f1;
     --secondary: #ec4899;
     --background: #0f172a;
     --surface: #1e293b;
@@ -116,8 +116,10 @@ h2 { font-size: 2.3rem; margin-bottom: 0.8em; }
 }
 .nav button:hover { border-color: var(--primary); }
 .dots { display: flex; gap: 8px; }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--surface-light); border: 1px solid var(--border); cursor: pointer; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--surface-light); border: 1px solid var(--border); cursor: pointer; padding: 0; font-size: 0; line-height: 0; }
 .dot.is-active { background: var(--primary); border-color: var(--primary); }
+.dot:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .hint { position: fixed; top: 18px; right: 22px; color: var(--text-muted); font-size: .8rem; opacity: .75; }
 .langbar { position: fixed; top: 14px; left: 18px; display: flex; gap: 6px; z-index: 6; }
 .langbar button {
@@ -125,7 +127,7 @@ h2 { font-size: 2.3rem; margin-bottom: 0.8em; }
     border-radius: 7px; padding: 5px 11px; font-size: .8rem; font-weight: 700; cursor: pointer; letter-spacing: .04em;
 }
 .langbar button:hover { border-color: var(--primary); color: var(--text); }
-.langbar button.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.langbar button.is-active { background: var(--primary); border-color: var(--primary); color: #0f172a; }
 .cta { display: inline-block; margin-top: 26px; padding: 13px 26px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: 700; text-decoration: none; }
 .cta:hover { background: var(--primary-dark); }
 a.plain { color: #a5b4fc; text-decoration: none; }
@@ -149,15 +151,15 @@ a.plain { color: #a5b4fc; text-decoration: none; }
   </defs>
 </svg>
 
-<div class="langbar" id="langbar" aria-label="Language">
-    <button data-lang="en" aria-label="English">EN</button>
-    <button data-lang="pl" aria-label="Polski">PL</button>
-    <button data-lang="de" aria-label="Deutsch">DE</button>
-</div>
-<div class="hint" data-i18n="hint">← → / space · click dots</div>
-<div class="deck" id="deck">
+<nav class="langbar" id="langbar" aria-label="Language">
+    <button data-lang="en" aria-label="English" aria-pressed="true">EN</button>
+    <button data-lang="pl" aria-label="Polski" aria-pressed="false">PL</button>
+    <button data-lang="de" aria-label="Deutsch" aria-pressed="false">DE</button>
+</nav>
+<div class="hint" data-i18n="hint" aria-live="polite">← → / space · click dots</div>
+<main class="deck" id="deck">
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 1">
     <div class="spiral-wrap"><svg class="svgi" aria-hidden="true"><use href="#i-spiral"/></svg></div>
     <h1>coru.dev</h1>
     <p class="sub" data-i18n="s1.sub"></p>
@@ -171,18 +173,18 @@ a.plain { color: #a5b4fc; text-decoration: none; }
     </div>
 </section>
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 2">
     <p class="eyebrow" data-i18n="s2.eyebrow"></p>
     <h2 data-i18n="s2.h"></h2>
     <p class="sub" data-i18n="s2.sub"></p>
     <div class="cards">
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-trend"/></svg></div><h3 data-i18n="s2.c1h"></h3><p data-i18n="s2.c1p"></p></div>
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-cursor"/></svg></div><h3 data-i18n="s2.c2h"></h3><p data-i18n="s2.c2p"></p></div>
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-dice"/></svg></div><h3 data-i18n="s2.c3h"></h3><p data-i18n="s2.c3p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-trend"/></svg></div><h3 data-i18n="s2.c1h"></h3><p data-i18n="s2.c1p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-cursor"/></svg></div><h3 data-i18n="s2.c2h"></h3><p data-i18n="s2.c2p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-dice"/></svg></div><h3 data-i18n="s2.c3h"></h3><p data-i18n="s2.c3p"></p></div>
     </div>
 </section>
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 3">
     <p class="eyebrow" data-i18n="s3.eyebrow"></p>
     <h2 data-i18n="s3.h"></h2>
     <p class="sub" data-i18n="s3.sub"></p>
@@ -192,22 +194,22 @@ a.plain { color: #a5b4fc; text-decoration: none; }
     </div>
 </section>
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 4">
     <p class="eyebrow" data-i18n="s4.eyebrow"></p>
     <h2 data-i18n="s4.h"></h2>
     <div class="cards">
         <div class="card">
-            <div class="icon"><svg class="svgi"><use href="#i-puzzle"/></svg></div><h3 data-i18n="s4.c1h"></h3>
+            <div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-puzzle"/></svg></div><h3 data-i18n="s4.c1h"></h3>
             <p data-i18n="s4.c1p"></p>
             <div class="models"><span class="chip">Windsurf</span><span class="chip">VS Code</span><span class="chip">Cursor</span><span class="chip">JetBrains</span><span class="chip">Antigravity</span></div>
         </div>
         <div class="card">
-            <div class="icon"><svg class="svgi"><use href="#i-keyboard"/></svg></div><h3 data-i18n="s4.c2h"></h3>
+            <div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-keyboard"/></svg></div><h3 data-i18n="s4.c2h"></h3>
             <p data-i18n="s4.c2p"></p>
             <div class="models"><span class="chip">Claude Code</span><span class="chip">aider</span><span class="chip">codex</span><span class="chip">gemini-cli</span><span class="chip">opencode</span></div>
         </div>
         <div class="card">
-            <div class="icon"><svg class="svgi"><use href="#i-swap"/></svg></div><h3 data-i18n="s4.c3h"></h3>
+            <div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-swap"/></svg></div><h3 data-i18n="s4.c3h"></h3>
             <p data-i18n="s4.c3p"></p>
             <div class="models"><span class="chip">MiniMax</span><span class="chip">Qwen3-coder</span><span class="chip">DeepSeek</span><span class="chip">local llama</span></div>
         </div>
@@ -215,7 +217,7 @@ a.plain { color: #a5b4fc; text-decoration: none; }
     <p class="sub" data-i18n="s4.sub"></p>
 </section>
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 5">
     <p class="eyebrow" data-i18n="s5.eyebrow"></p>
     <h2 data-i18n="s5.h"></h2>
     <div class="term" aria-hidden="true">
@@ -225,18 +227,18 @@ a.plain { color: #a5b4fc; text-decoration: none; }
     <p class="sub"><span data-i18n="s5.sub1"></span> <span class="code-inline">executor.kind=llm</span> <span data-i18n="s5.sub2"></span></p>
 </section>
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 6">
     <p class="eyebrow" data-i18n="s6.eyebrow"></p>
     <h2 data-i18n="s6.h"></h2>
     <div class="cards">
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-ticket"/></svg></div><h3 data-i18n="s6.c1h"></h3><p data-i18n="s6.c1p"></p></div>
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-shield"/></svg></div><h3 data-i18n="s6.c2h"></h3><p data-i18n="s6.c2p"></p></div>
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-bandage"/></svg></div><h3 data-i18n="s6.c3h"></h3><p data-i18n="s6.c3p"></p></div>
-        <div class="card"><div class="icon"><svg class="svgi"><use href="#i-chart"/></svg></div><h3 data-i18n="s6.c4h"></h3><p data-i18n="s6.c4p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-ticket"/></svg></div><h3 data-i18n="s6.c1h"></h3><p data-i18n="s6.c1p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-shield"/></svg></div><h3 data-i18n="s6.c2h"></h3><p data-i18n="s6.c2p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-bandage"/></svg></div><h3 data-i18n="s6.c3h"></h3><p data-i18n="s6.c3p"></p></div>
+        <div class="card"><div class="icon"><svg class="svgi" aria-hidden="true"><use href="#i-chart"/></svg></div><h3 data-i18n="s6.c4h"></h3><p data-i18n="s6.c4p"></p></div>
     </div>
 </section>
 
-<section class="slide" data-slide>
+<section class="slide" data-slide role="group" aria-label="Slide 7">
     <p class="eyebrow" data-i18n="s7.eyebrow"></p>
     <h2 data-i18n="s7.h"></h2>
     <div class="term" aria-hidden="true">
@@ -251,11 +253,11 @@ a.plain { color: #a5b4fc; text-decoration: none; }
     <a class="cta" href="https://www.coru.dev" target="_blank" rel="noopener" data-i18n="s7.cta"></a>
 </section>
 
-</div>
+</main>
 
-<div class="nav">
+<div class="nav" role="navigation" aria-label="Slide navigation">
     <button id="prev" aria-label="Previous slide">←</button>
-    <div class="dots" id="dots"></div>
+    <div class="dots" id="dots" role="group" aria-label="Slide indicators"></div>
     <button id="next" aria-label="Next slide">→</button>
 </div>
 
@@ -413,7 +415,11 @@ function applyLang(lang) {
         const val = dict[el.dataset.i18n];
         if (val !== undefined) el.textContent = val;
     });
-    document.querySelectorAll('#langbar button').forEach((b) => b.classList.toggle('is-active', b.dataset.lang === lang));
+    document.querySelectorAll('#langbar button').forEach((b) => {
+        const active = b.dataset.lang === lang;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-pressed', String(active));
+    });
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
 }
 
@@ -426,8 +432,9 @@ let index = 0;
 let termToken = 0;
 
 slides.forEach((_, i) => {
-    const d = document.createElement('span');
+    const d = document.createElement('button');
     d.className = 'dot';
+    d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
     d.addEventListener('click', () => go(i));
     dotsBox.appendChild(d);
 });
@@ -467,7 +474,10 @@ async function playTerm(el, token) {
 
 function go(i) {
     index = (i + slides.length) % slides.length;
-    slides.forEach((s, k) => s.classList.toggle('is-active', k === index));
+    slides.forEach((s, k) => {
+        s.classList.toggle('is-active', k === index);
+        s.setAttribute('aria-hidden', String(k !== index));
+    });
     dots.forEach((d, k) => d.classList.toggle('is-active', k === index));
     location.hash = '#/' + (index + 1);
     termToken += 1;
